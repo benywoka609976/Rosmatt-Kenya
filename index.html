@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RosmaTT Kenya - E-Commerce Landing Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Icons CDN for rose emoji, cart, phones etc -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #d32f2f;
+      --background: #fff;
+      --blurred-bg: url('https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80');
+      --highlight: #fff;
+      --font: 'Segoe UI', Arial, sans-serif;
+      --cart-bg:rgba(255,255,255,0.95);
+    }
+    [data-theme="red-white"]    { --primary:#d32f2f; --background:#fff; --highlight:#fff;}
+    [data-theme="black-white"]  { --primary:#111; --background:#fff; --highlight:#000;}
+    [data-theme="purple-blue"]  { --primary:#512da8; --background:#e3f2fd; --highlight:#1976d2;}
+    [data-theme="maroon-white"] { --primary:#800000; --background:#fff; --highlight:#eee;}
+    [data-theme="gold-black"]   { --primary:gold; --background:#111; --highlight:#800;}
+    html, body {margin:0; padding:0; font-family:var(--font);}
+    body {
+      min-height:100vh;
+      background: var(--blurred-bg) center/cover no-repeat fixed;
+      backdrop-filter: blur(6px);
+      background-color:var(--background);
+      transition: background 0.5s;
+    }
+    .blur-bg {
+      position: fixed; inset:0; z-index:0;
+      background: inherit;
+      filter: blur(6px) brightness(0.85);
+      pointer-events: none;
+    }
+    header {position:sticky; top:0; background:var(--cart-bg); z-index:10; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:.5em 5vw; box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+    nav {display:flex;gap:.8em;font-size:1.08em;}
+    nav a {color:var(--primary); text-decoration:none; font-weight:500; padding:0.3em 0.7em;border-radius:2em;transition:background 0.15s;}
+    nav a.active, nav a:hover { background:var(--primary); color:var(--highlight);}
+    .header-right {display:flex;gap:1em;align-items:center;}
+    .theme-switcher select { padding:.3em; border-radius:.5em; border:1px solid #ccc;}
+    .quote {font-size:0.95em; color:var(--primary); font-style:italic;}
+    main {max-width:1200px; margin:2em auto 4em; z-index:1; background-color:rgba(255,255,255,0.96); border-radius:1em; box-shadow:0 0 38px rgba(0,0,0,0.08);}
+    h1, h2, h3 { color:var(--primary);}
+    section.page { display:none; animation:fadeIn .7s;}
+    section.page.active { display:block;}
+    @keyframes fadeIn{ from {opacity:0;} to {opacity:1;} }
+    .slider-container {margin:auto;max-width:940px; position:relative;}
+    .slider {display:flex;overflow:hidden; border-radius:1em;}
+    .slide {flex:1 0 100%;height:280px;transition:transform 0.6s;}
+    .slide img {width:100%;height:100%;object-fit:cover;border-radius:1em;}
+    .slider-nav {position:absolute;top:50%;left:0;right:0;display:flex;justify-content:space-between;align-items:center;pointer-events:none;}
+    .slider-btn {background:var(--primary);color:var(--highlight);border:none;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,0.13);padding:0.7em 0.9em;font-size:1.2em;cursor:pointer;pointer-events:all;}
+    /* Product Grid */
+    .product-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5em;margin-top:1em;}
+    .product-card {
+      background:#fff; border-radius:1em; box-shadow:0 2px 12px rgba(0,0,0,0.07);
+      padding:1em; position:relative; overflow:hidden; cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:transform 0.15s;
+    }
+    .product-card:hover {animation:vibrate .13s linear 6;}
+    @keyframes vibrate { 0%{transform:translate(0,0);} 20%{transform:translate(-2px,1px);} 40%{transform:translate(2px,-1px);} 60%{transform:translate(-1px,2px);} 80%{transform:translate(1px,-2px);} 100%{transform:translate(0,0);} }
+    .product-card img {width:180px;height:120px;object-fit:cover;border-radius:0.6em;margin-bottom:0.3em;}
+    .product-name {font-size:1.07em;font-weight:bold;}
+    .product-price {color:var(--primary);font-weight:bold;}
+    .add-cart-btn {background:var(--primary);color:var(--highlight);border:none;padding:0.5em 1em; border-radius:1em; margin-top:0.25em; cursor:pointer; transition:background 0.12s;}
+    .add-cart-btn:hover {background:var(--highlight); color:var(--primary);}
+    /* Cart */
+    .cart-floating {
+      position:fixed;bottom:1.7em;right:1.7em;z-index:16;
+      background:var(--cart-bg); border-radius:1.5em; box-shadow:0 4px 28px rgba(0,0,0,0.15);
+      width:320px; min-height:45px; padding:1em; transition:all 0.3s;
+    }
+    .cart-header {display:flex;align-items:center;justify-content:space-between; font-weight:600;}
+    .cart-items {max-height:260px;overflow-y:auto;margin:0.7em 0;}
+    .cart-item {display:flex;align-items:center;justify-content:space-between;gap:0.5em;padding:0.5em 0;}
+    .cart-item img {width:56px;height:38px;object-fit:cover;border-radius:.3em;}
+    .cart-quantity input {width:45px;padding:0.1em .6em;text-align:center;}
+    .cart-total {font-size:1.1em;font-weight:bold;color:var(--primary);}
+    .cart-actions {display:flex;gap:.7em;margin-top:.7em;}
+    .checkout-btn, .empty-cart-btn {padding:0.5em 1.2em;border:none;border-radius:1em;cursor:pointer;transition:background 0.15s;}
+    .checkout-btn {background:var(--primary);color:var(--highlight);}
+    .empty-cart-btn {background:#999;color:#fff;}
+    /* Modal */
+    .modal-bg {position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;display:none;align-items:center;justify-content:center;}
+    .modal-bg.active {display:flex;}
+    .modal {background:#fff;padding:2em 2.2em;border-radius:1em;box-shadow:0 8px 38px rgba(0,0,0,0.19);min-width:340px;max-width:90vw;}
+    .modal-close {position:absolute;top:0.7em;right:1.2em;font-size:1.5em;cursor:pointer;color:#b71c1c;}
+    .modal .modal-img {width:100%;max-width:380px;height:180px;object-fit:cover;border-radius:0.5em;margin-bottom:0.75em;}
+    /* Buttons */
+    .contact-btn, .call-btn {padding:0.5em 1.2em;border:none;border-radius:1.1em; background:var(--primary);color:var(--highlight);font-weight:500;cursor:pointer;}
+    /* Video Section */
+    .video-row {display:flex;justify-content:center;gap:1em;margin:1em 0;}
+    .video-row video {max-width:350px;border-radius:0.7em;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+    /* CEO Section */
+    .ceo-section {display:flex;align-items:center;gap:1.8em;margin:2em 0;padding:2em;background:rgba(253,241,242,0.8);border-radius:1.1em;}
+    .ceo-img {width:130px;height:130px;border-radius:50%;object-fit:cover;box-shadow:0 2px 25px rgba(240,121,122,0.25);}
+    /* FAQ, Policy, Form */
+    .faq-list, .policy-list {margin:.6em 0;}
+    .faq-list li, .policy-list li {margin-bottom:.7em;}
+    .form-row {display:flex;flex-direction:column;gap:.8em;}
+    .form-row label {font-weight:500;}
+    .form-row input, .form-row textarea {padding:.55em; border-radius:.7em; border:1px solid #ccc;}
+    /* Footer */
+    footer { text-align:center; padding:2em 0; background:var(--primary); color:var(--highlight); margin-top:2em; border-radius:0 0 1em 1em;}
+    .footer-links {display:flex;gap:1em;justify-content:center; margin:1em 0;}
+    .footer-links a {color:var(--highlight); text-decoration:underline; font-weight:500;}
+    /* Responsive */
+    @media (max-width:700px) {
+      header {flex-direction:column;}
+      .slider-container {max-width:100vw;}
+      .cart-floating {width:96vw;}
+      .ceo-section {flex-direction:column;}
+      .product-card img {width:100%;}
+      .video-row {flex-direction:column;}
+    }
+  </style>
+</head>
+<body data-theme="red-white">
+
+<div class="blur-bg"></div>
+
+<header>
+  <div>
+    <span style="font-size:1.33em;font-weight:700;color:var(--primary);"><i class="fa-solid fa-shop"></i> RosmaTT Kenya</span>
+  </div>
+  <nav id="nav">
+    <a href="#home" data-page="home" class="active">Home</a>
+    <a href="#about" data-page="about">About</a>
+    <a href="#smartphones" data-page="smartphones">Smartphones</a>
+    <a href="#household-electronics" data-page="household-electronics">Household Electronics</a>
+    <a href="#cleaning-equipment" data-page="cleaning-equipment">Cleaning Equipment</a>
+    <a href="#kitchenware" data-page="kitchenware">Kitchenware</a>
+    <a href="#shoes" data-page="shoes">Shoes</a>
+    <a href="#clothes" data-page="clothes">Clothes</a>
+    <a href="#computer-desktops" data-page="computer-desktops">Desktops</a>
+    <a href="#laptops" data-page="laptops">Laptops</a>
+    <a href="#gaming-laptops" data-page="gaming-laptops">Gaming Laptops</a>
+    <a href="#faq" data-page="faq">FAQ</a>
+    <a href="#shipping-policy" data-page="shipping-policy">Shipping Policy</a>
+    <a href="#contact" data-page="contact">Contact</a>
+    <a href="#checkout" data-page="checkout">Checkout</a>
+  </nav>
+  <div class="header-right">
+    <span class="quote">"Roses are Red, and Violets are Blue" <span style="font-size:1.1em">🌹</span></span>
+    <div class="theme-switcher">
+      <select id="theme-switch">
+        <option value="red-white">Red White</option>
+        <option value="black-white">Black White</option>
+        <option value="purple-blue">Purple Blue</option>
+        <option value="maroon-white">Maroon White</option>
+        <option value="gold-black">Gold Black</option>
+      </select>
+    </div>
+    <button class="call-btn" onclick="window.open('tel:0714227080')"><i class="fa-solid fa-phone"></i> Call</button>
+  </div>
+</header>
+
+<main id="app">
+  <!-- Home (Landing Page) -->
+  <section class="page active" id="page-home">
+    <h1>Welcome to RosmaTT Kenya</h1>
+    <div class="slider-container">
+      <div class="slider" id="main-slider">
+        <!-- Slider images; replace links with your own product banners -->
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Phone+Deals" alt="Phone Deals"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Electronics+Sale" alt="Electronics Sale"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Cleaning+Essentials" alt="Cleaning Essentials"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Kitchenware+Specials" alt="Kitchenware"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Shoes+Collection" alt="Shoes"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Trendy+Clothes" alt="Clothes"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Computer+Desktops" alt="Desktops"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Gaming+Laptops" alt="Gaming Laptops"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=FAQ+Customer+Care" alt="FAQ"></div>
+        <div class="slide"><img src="https://via.placeholder.com/900x280?text=Maroon+Theme+Special" alt="Maroon Theme"></div>
+      </div>
+      <div class="slider-nav">
+        <button class="slider-btn" id="slider-prev"><i class="fa-solid fa-angle-left"></i></button>
+        <button class="slider-btn" id="slider-next"><i class="fa-solid fa-angle-right"></i></button>
+      </div>
+    </div>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div style="text-align:center;margin-top:2em;">
+      <h2>Shop By Category</h2>
+      <div style="display:flex;gap:2em;justify-content:center;flex-wrap:wrap;">
+        <a href="#smartphones" class="category-link"><i class="fa-solid fa-mobile"></i> Smartphones</a>
+        <a href="#laptops" class="category-link"><i class="fa-solid fa-laptop"></i> Laptops</a>
+        <a href="#shoes" class="category-link"><i class="fa-solid fa-shoe-prints"></i> Shoes</a>
+        <a href="#clothes" class="category-link"><i class="fa-solid fa-shirt"></i> Clothes</a>
+        <a href="#kitchenware" class="category-link"><i class="fa-solid fa-utensils"></i> Kitchenware</a>
+        <a href="#household-electronics" class="category-link"><i class="fa-solid fa-tv"></i> Household Electronics</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="page" id="page-about">
+    <h1>About RosmaTT Kenya</h1>
+    <p>
+      RosmaTT Kenya is your one-stop shop for authentic electronics, kitchenware, fashion, and more.  
+      We bring you the best deals, fast delivery, and top-rated customer service for all your household needs.
+    </p>
+    <div class="ceo-section">
+      <img src="https://via.placeholder.com/130?text=CEO" class="ceo-img" alt="CEO">
+      <div>
+        <h2>Message from our CEO</h2>
+        <p>
+          "Here at RosmaTT, our goal is not just to sell products, but to create a memorable shopping experience for every Kenyan.  
+          Every item on our platform is carefully selected for quality and value.  
+          <b>Shopping with us means reliability, speed, and a personal touch.</b>  
+          Welcome to a new era of e-commerce, where your needs come first!<br>
+          <em>— RosmaTT CEO</em>
+        </p>
+      </div>
+    </div>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+  </section>
+
+  <!-- Smartphones -->
+  <section class="page" id="page-smartphones">
+    <h1>Smartphones</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-smartphones">
+      <!-- JS will populate 20 listings -->
+    </div>
+  </section>
+
+  <!-- Household Electronics -->
+  <section class="page" id="page-household-electronics">
+    <h1>Household Electronics</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-household-electronics"></div>
+  </section>
+
+  <section class="page" id="page-cleaning-equipment">
+    <h1>Cleaning Equipment</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-cleaning-equipment"></div>
+  </section>
+
+  <section class="page" id="page-kitchenware">
+    <h1>Kitchenware</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-kitchenware"></div>
+  </section>
+
+  <section class="page" id="page-shoes">
+    <h1>Shoes</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-shoes"></div>
+  </section>
+
+  <section class="page" id="page-clothes">
+    <h1>Clothes</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-clothes"></div>
+  </section>
+
+  <section class="page" id="page-computer-desktops">
+    <h1>Computer Desktops</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-computer-desktops"></div>
+  </section>
+
+  <section class="page" id="page-laptops">
+    <h1>Laptops</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-laptops"></div>
+  </section>
+
+  <section class="page" id="page-gaming-laptops">
+    <h1>Gaming Laptops</h1>
+    <div class="video-row">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay muted loop controls></video>
+      <video src="https://www.w3schools.com/html/movie.mp4" autoplay muted loop controls></video>
+    </div>
+    <div class="product-grid" id="grid-gaming-laptops"></div>
+  </section>
+
+  <section class="page" id="page-faq">
+    <h1>FAQ</h1>
+    <ul class="faq-list">
+      <li><b>How do I order?</b> <br>Browse products, click 'Add to Cart', go to checkout, and place the order via WhatsApp.</li>
+      <li><b>How fast is delivery?</b> <br>Delivery takes 1-2 days in Nairobi, 2-3 days nationwide.</li>
+      <li><b>Payment options?</b> <br>Pay on delivery with cash or M-Pesa. No prepayment needed.</li>
+      <li><b>Warranty?</b> <br>All electronics come with a 6-month warranty. See more on policy page.</li>
+      <li><b>Is support available?</b> <br>Contact our hotline or WhatsApp anytime!</li>
+    </ul>
+  </section>
+
+  <section class="page" id="page-shipping-policy">
+    <h1>Shipping & Return Policy</h1>
+    <ul class="policy-list">
+      <li><b>Free shipping:</b> All orders above Ksh 3,000.</li>
+      <li><b>Returns:</b> Return any faulty item within 7 days for refund or replacement.</li>
+      <li><b>Delivery:</b> Nairobi delivery is same day for orders before 1pm, rest of Kenya 1-3 days.</li>
+    </ul>
+  </section>
+
+  <section class="page" id="page-contact">
+    <h1>Contact Us</h1>
+    <form id="query-form">
+      <div class="form-row">
+        <label for="name">Name:</label>
+        <input required id="name" name="name" type="text" placeholder="Your Name"/>
+        <label for="query">Your Query:</label>
+        <textarea required id="query" name="query" rows="3" placeholder="Ask us anything..."></textarea>
+      </div>
+      <button class="contact-btn" type="submit"><i class="fa-brands fa-whatsapp"></i> WhatsApp Query</button>
+    </form>
+    <div style="margin:1em 0;">
+      <button class="call-btn" onclick="window.open('tel:0714227080')"><i class="fa-solid fa-phone"></i> Call 0714227080</button>
+    </div>
+  </section>
+
+  <section class="page" id="page-checkout">
+    <h1>Checkout</h1>
+    <p><strong style="color:var(--primary)">Checkout is instant!</strong> Your order will be sent to WhatsApp. Review cart and click 'Checkout' in cart window.</p>
+    <div id="checkout-cart-preview"></div>
+  </section>
+</main>
+
+<!-- Cart Floating Sidebar -->
+<div class="cart-floating" id="cart-sidebar">
+  <div class="cart-header">
+    <span><i class="fa-solid fa-cart-shopping"></i> Cart (<span id="cart-count">0</span>)</span>
+    <button id="cart-close" style="background:none;border:none;color:var(--primary);font-size:1.3em;cursor:pointer;display:none;">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-total">Total: Ksh <span id="cart-total">0</span></div>
+  <div class="cart-actions">
+    <button class="checkout-btn" id="checkout-btn"><i class="fa-brands fa-whatsapp"></i> Checkout</button>
+    <button class="empty-cart-btn" id="empty-cart-btn">Empty</button>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal" id="modal">
+    <span class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></span>
+    <img class="modal-img" id="modal-img" src="" alt="">
+    <h2 id="modal-title"></h2>
+    <div id="modal-description"></div>
+    <div style="margin-top:1em;">
+      <span class="product-price" id="modal-price"></span>
+      <button class="add-cart-btn" id="modal-add-cart">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span style="font-size:1.1em;">
+    "Roses are Red, and Violets are Blue" 🌹
+  </span>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+    <a href="#shipping-policy">Shipping Policy</a>
+    <a href="#faq">FAQ</a>
+    <a href="#checkout">Checkout</a>
+  </div>
+  <div>
+    &copy; 2025 RosmaTT Kenya. All rights reserved.
+  </div>
+</footer>
+
+<script>
+(function() {
+  /*** Data ***/
+  const categories = [
+    {id:"smartphones",      name:"Smartphones",    bg:'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80'},
+    {id:"household-electronics", name:"Household Electronics", bg:'https://images.unsplash.com/photo-1470240722258-95c63be0c485?auto=format&fit=crop&w=800&q=80'},
+    {id:"cleaning-equipment", name:"Cleaning Equipment", bg:'https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=800&q=80'},
+    {id:"kitchenware",      name:"Kitchenware",    bg:'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80'},
+    {id:"shoes",            name:"Shoes",          bg:'https://images.unsplash.com/photo-1519864602345-378857c3c657?auto=format&fit=crop&w=800&q=80'},
+    {id:"clothes",          name:"Clothes",        bg:'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80'},
+    {id:"computer-desktops",name:"Desktops",       bg:'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80'},
+    {id:"laptops",          name:"Laptops",        bg:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80'},
+    {id:"gaming-laptops",   name:"Gaming Laptops", bg:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80'}
+  ];
+  // Demo products per category (replace URLs/descriptions/prices as needed in real use)
+  function genProducts(cat, count=20) {
+    let arr=[];
+    for(let i=1;i<=count;i++){
+      arr.push({
+        id:cat+'-'+i,
+        name:`${categories.find(c=>c.id===cat)?.name||cat} Model ${i}`,
+        img:`https://via.placeholder.com/180x120?text=${cat}+${i}`,
+        price:15000+300*i,
+        desc:`High quality ${cat.replace('-',' ')}. Features of model ${i}. Durable, reliable, and affordable.`
+      });
+    }
+    return arr;
+  }
+  const productData = {};
+  categories.forEach(cat=>{ productData[cat.id]=genProducts(cat.id,20) });
+
+  // Other pages bg
+  const pagesBg = {
+    'home':      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80',
+    'about':     'https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=800&q=80',
+    'faq':       'https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?auto=format&fit=crop&w=800&q=80',
+    'contact':    'https://images.unsplash.com/photo-1482062364825-616fd23b8fc1?auto=format&fit=crop&w=800&q=80',
+    'shipping-policy':'https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=800&q=80',
+    'checkout':'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80'
+  };
+
+  /*** Theme Manager ***/
+  const themeSelector=document.getElementById('theme-switch');
+  function applyTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme',theme);
+  }
+  themeSelector.addEventListener('change',e=>applyTheme(e.target.value));
+  // Load saved theme
+  let savedTheme=localStorage.getItem('theme');
+  if(savedTheme) { themeSelector.value=savedTheme; applyTheme(savedTheme); }
+
+  /*** Router: SPA Navigation ***/
+  let currentPage='home';
+  function showPage(pageid) {
+    // Page show/hide
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    let page=document.getElementById('page-'+pageid);
+    if(page) page.classList.add('active');
+    // Nav highlight
+    document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+    document.querySelector(`nav a[data-page="${pageid}"]`)?.classList.add('active');
+    // Blurred BG set
+    let bg=pagesBg[pageid]||categories.find(c=>c.id===pageid)?.bg||pagesBg['home'];
+    document.body.style.setProperty('--blurred-bg', `url('${bg}')`);
+    currentPage=pageid;
+    if(pageid==='checkout') renderCheckoutPreview();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  window.addEventListener('hashchange',()=>{ 
+    let h=location.hash.replace(/^#/,'')||'home';
+    showPage(h); 
+  });
+  // Initial view
+  showPage(location.hash.replace(/^#/,'')||'home');
+
+  // Nav links SPA
+  document.getElementById('nav').addEventListener('click',function(e){
+    let a=e.target.closest('a[data-page]');
+    if(a){ e.preventDefault(); showPage(a.dataset.page); history.replaceState(null,"",`#${a.dataset.page}`); }
+  });
+
+  /*** Slider Home Page (Landing) ***/
+  let slider=document.getElementById('main-slider'), slides=slider.querySelectorAll('.slide'), sIdx=0;
+  function showSlide(idx){
+    sIdx=Math.max(0,Math.min(slides.length-1,idx));
+    slider.style.transform=`translateX(-${100*sIdx}%)`;
+  }
+  document.getElementById('slider-next').onclick=()=>showSlide(sIdx+1>=slides.length?0:sIdx+1);
+  document.getElementById('slider-prev').onclick=()=>showSlide(sIdx-1<0?slides.length-1:sIdx-1);
+  showSlide(sIdx);
+  setInterval(()=>{ if(currentPage==='home')showSlide((sIdx+1)%slides.length); },4000);
+
+  /*** Product Grid Loader ***/
+  function renderProducts(catId,gridId){
+    let grid=document.getElementById(gridId);
+    grid.innerHTML='';
+    (productData[catId]||[]).forEach(prod=>{
+      let card=document.createElement('div');
+      card.className="product-card"; card.dataset.id=prod.id; card.tabIndex=0;
+      card.innerHTML=`
+        <img loading="lazy" src="${prod.img}" alt="${prod.name}">
+        <div class="product-name">${prod.name}</div>
+        <div class="product-price">Ksh ${prod.price}</div>
+        <button class="add-cart-btn" data-id="${prod.id}"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+      `;
+      card.addEventListener('click',e=>{
+        if(e.target.classList.contains('add-cart-btn')) return;
+        showProductModal(prod);
+      });
+      card.querySelector('.add-cart-btn').onclick=function(ev){
+        ev.stopPropagation();
+        addToCart(prod.id);
+      }
+      grid.appendChild(card);
+    });
+  }
+  // Render products for all categories
+  Object.keys(productData).forEach(cat=>{
+    renderProducts(cat,"grid-"+cat);
+  });
+
+  /*** Product Modal ***/
+  let modalBg=document.getElementById('modal-bg');
+  function showProductModal(prod){
+    document.getElementById('modal-img').src=prod.img;
+    document.getElementById('modal-title').textContent=prod.name;
+    document.getElementById('modal-description').textContent=prod.desc;
+    document.getElementById('modal-price').textContent=`Ksh ${prod.price}`;
+    document.getElementById('modal-add-cart').onclick=function(){ addToCart(prod.id); modalBg.classList.remove('active'); };
+    modalBg.classList.add('active');
+  }
+  document.getElementById('modal-close').onclick=function(){ modalBg.classList.remove('active'); };
+  modalBg.addEventListener('click',function(ev){ if(ev.target===modalBg) modalBg.classList.remove('active'); });
+
+  /*** Cart Manager ***/
+  let cart = JSON.parse(localStorage.getItem('cart')||'{}');
+  function saveCart() { localStorage.setItem('cart',JSON.stringify(cart)); }
+  function addToCart(prodId){
+    let prod=Object.values(productData).flat().find(p=>p.id===prodId); if(!prod)return;
+    cart[prodId]=cart[prodId]||{id:prodId,qty:0}; cart[prodId].qty++;
+    saveCart(); renderCart();
+  }
+  function removeFromCart(prodId){
+    delete cart[prodId]; saveCart(); renderCart();
+  }
+  function changeQuantity(prodId,newQty){
+    if(newQty<=0){ removeFromCart(prodId); return; }
+    cart[prodId].qty=newQty; saveCart(); renderCart();
+  }
+  function emptyCart(){ cart={}; saveCart(); renderCart();}
+  function getCartItems(){
+    return Object.values(cart).map(ci=>{
+      let prod=Object.values(productData).flat().find(p=>p.id===ci.id); if(!prod) return null;
+      return {...prod,qty:ci.qty};
+    }).filter(Boolean);
+  }
+  // Render Cart Floating Sidebar
+  function renderCart(){
+    let items=getCartItems();
+    document.getElementById('cart-count').textContent=items.reduce((c,i)=>c+i.qty,0);
+    let cartItemsDiv=document.getElementById('cart-items');
+    cartItemsDiv.innerHTML='';
+    let total=0;
+    items.forEach(item=>{
+      total+=item.price*item.qty;
+      let div=document.createElement('div');
+      div.className='cart-item';
+      div.innerHTML=`
+        <img src="${item.img}" alt="${item.name}">
+        <span>${item.name}</span>
+        <span>Ksh ${item.price} x</span>
+        <span class="cart-quantity"><input type="number" min="1" value="${item.qty}" style="width:38px;"></span>
+        <button style="background:none;color:#b71c1c;font-size:1.2em;border:none;cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+      `;
+      div.querySelector('.cart-quantity input').onchange=(e)=>changeQuantity(item.id,parseInt(e.target.value)||1);
+      div.querySelector('button').onclick=()=>removeFromCart(item.id);
+      cartItemsDiv.appendChild(div);
+    });
+    document.getElementById('cart-total').textContent=total;
+  }
+  renderCart();
+
+  document.getElementById('empty-cart-btn').onclick=emptyCart;
+
+  // Checkout: redirect to WhatsApp
+  function cartOrderMessage(){
+    let items=getCartItems();
+    if(!items.length) return "No items in cart!";
+    let msg="Hello, I'd like to order:\n";
+    items.forEach(i=>{
+      msg+=`${i.name} (x${i.qty}) Ksh ${i.price*i.qty}\n`;
+    });
+    msg+=`Total: Ksh ${items.reduce((sum,i)=>sum+i.price*i.qty,0)}\nThanks!`;
+    return encodeURIComponent(msg);
+  }
+  document.getElementById('checkout-btn').onclick=function(){
+    let msg=cartOrderMessage();
+    if(msg==="No items in cart!") return alert(msg);
+    window.open(`https://wa.me/254714227080?text=${msg}`,'_blank');
+  }
+
+  // Cart preview for Checkout page
+  function renderCheckoutPreview(){
+    let div=document.getElementById('checkout-cart-preview');
+    let items=getCartItems();
+    div.innerHTML='<h3>Preview Cart</h3>'+ (
+      items.length? `<ul>${items.map(i=>`<li>${i.name} x${i.qty} = Ksh ${i.price*i.qty}</li>`).join('')}</ul> <strong>Total: Ksh ${items.reduce((sum,i)=>sum+i.price*i.qty,0)}</strong>`
+      : '<em>Cart is empty.</em>'
+    );
+  }
+
+  /*** Query Form, send message to WhatsApp ***/
+  document.getElementById('query-form').onsubmit=function(ev){
+    ev.preventDefault();
+    let name=document.getElementById('name').value,
+        query=document.getElementById('query').value;
+    let msg = encodeURIComponent(`Hello RosmaTT, my name is ${name}. My query:\n${query}`);
+    window.open(`https://wa.me/254714227080?text=${msg}`,'_blank');
+  };
+
+  /*** Lazy load images for performance ***/
+  if ('loading' in HTMLImageElement.prototype){
+    document.querySelectorAll('img[loading="lazy"]').forEach(img=>{
+      img.loading='lazy';
+    });
+  }
+
+  /*** Floating Cart Responsive (Hide on Checkout page) ***/
+  function cartSidebarDisplay(){
+    let sidebar=document.getElementById('cart-sidebar');
+    if(currentPage==='checkout') sidebar.style.display='none';
+    else sidebar.style.display='';
+  }
+  window.addEventListener('hashchange',cartSidebarDisplay);
+  cartSidebarDisplay();
+
+  /*** Accessibility: Escape closes Modal ***/
+  window.addEventListener('keydown',function(e){
+    if(e.key==='Escape')modalBg.classList.remove('active');
+  });
+
+  // END SPA JS
+})();
+</script>
+</html>
